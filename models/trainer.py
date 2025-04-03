@@ -15,16 +15,27 @@ class Entrenador:
         """Carga la Pokédex desde un archivo JSON"""
         ruta_pokedex = os.path.join("assets", "pokedex.json")
         with open(ruta_pokedex, "r", encoding="utf-8") as archivo:
-            return json.load(archivo)
+            return json.load(archivo)["pokemon"]  # Accede a la lista de Pokémon
 
     def asignar_pokemon(self, dia, mes, anio):
-        """Asigna un Pokémon inicial basado en la fecha de nacimiento"""
-        numero_pokemon = dia + mes + (anio % 10)  # Última cifra del año
-        if 1 <= numero_pokemon <= 493:
-            return self.pokedex[str(numero_pokemon)]
-        else:
-            shiny_pokemon = self.pokedex[str(numero_pokemon // 4)]
-            return f"{shiny_pokemon} (Shiny)"
+        """Asigna el Pokémon inicial basado en la fecha de nacimiento"""
+        random.seed(anio)
+        resta_random = random.randint(1500, 1800)
+        numero_pokemon = (dia * 2) + mes + (anio - resta_random)
+
+        # Buscar el Pokémon correspondiente en la Pokédex
+        for pokemon in self.pokedex:
+            if pokemon["numero"] == numero_pokemon:
+                return f"#{pokemon['numero']} - {pokemon['nombre']}"
+
+        # Si no está en la Pokédex, calcular el shiny
+        shiny_numero = numero_pokemon // 2
+        for pokemon in self.pokedex:
+            if pokemon["numero"] == shiny_numero:
+                return f"#{shiny_numero} - {pokemon['nombre']} (Shiny)"
+
+        # Si no hay Pokémon con ese número, solo mostrar el número
+        return f"#{shiny_numero} (Shiny)"
 
     def mostrar_info(self):
         """Muestra la información del entrenador"""
@@ -34,5 +45,5 @@ class Entrenador:
         print(f"Pokémon Inicial: {self.pokemon_inicial}")
 
 # Ejemplo de uso
-entrenador1 = Entrenador("Ash", "Masculino", 1, 12, 1997)
+entrenador1 = Entrenador("Ash", "Masculino", 5, 5, 2015)
 entrenador1.mostrar_info()
