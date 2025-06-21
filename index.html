@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokémon Inicial</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>¡Descubre tu Pokémon inicial!</h1>
+
+    <form id="formulario">
+      <label>Nombre:
+        <input type="text" id="nombre" required />
+      </label>
+
+      <label>Género:
+        <select id="genero">
+          <option>Masculino</option>
+          <option>Femenino</option>
+          <option>Otro</option>
+        </select>
+      </label>
+
+      <label>Día de nacimiento:
+        <input type="number" id="dia" min="1" max="31" required />
+      </label>
+
+      <label>Mes de nacimiento:
+        <input type="number" id="mes" min="1" max="12" required />
+      </label>
+
+      <label>Año de nacimiento:
+        <input type="number" id="anio" min="1900" max="2100" required />
+      </label>
+
+      <button type="button" onclick="crearEntrenador()">¡Asignar Pokémon!</button>
+    </form>
+
+    <div id="resultado-container">
+      <h2>Resultado:</h2>
+      <div id="info">...</div>
+      <img id="sprite" src="" alt="Sprite del Pokémon" hidden />
+    </div>
+  </div>
+
+  <script src="./js/functions.js"></script>
+</body>
+</html>
