@@ -1,61 +1,46 @@
 // Clase que representa al Entrenador Pokémon
 class Entrenador {
   constructor(nombre, genero, dia, mes, anio) {
-    // Se almacenan los datos básicos del entrenador
     this.nombre = nombre;
     this.genero = genero;
     this.fechaNacimiento = { dia, mes, anio };
-
-    // Atributos que se completarán más adelante
-    this.pokemonInicial = null; // nombre y número del pokémon asignado
-    this.sprite = null;         // URL del sprite
-    this.tipos = [];            // Tipos del Pokémon (agua, fuego, etc.)
+    this.pokemonInicial = null;
+    this.sprite = null;
+    this.tipos = [];
+    this.esShiny = false; // Indica si el Pokémon es shiny
   }
 
-  // Método para asignar un Pokémon según la fecha de nacimiento
+  // Asigna un Pokémon en base a la fecha de nacimiento y semilla aleatoria
   async asignarPokemon(dia, mes, anio) {
-    // Semilla para generar aleatoriedad basada en el año de nacimiento
     const seed = anio;
-    const random = this.seededRandom(seed); // función personalizada de aleatoriedad
+    const random = this.seededRandom(seed);
 
-    // Base numérica a partir del día, mes y dos últimos dígitos del año
     const base = (dia * mes) + (anio % 100);
-
-    // Mezcla aleatoria (pseudoaleatoria) para variar aún más
     const mix = Math.floor(random() * 493);
-
-    // Se calcula un número final entre 1 y 493 (Gen 1-4)
     const numeroPokemon = ((base + mix) % 493) + 1;
 
-    // Probabilidad 1 entre 4000 para que salga shiny
-    const esShiny = Math.floor(Math.random() * 4000) === 0;
+    // Determina si el Pokémon será shiny (1 en 4000)
+    const esShiny = Math.floor(Math.random() * 500) === 0;
+    this.esShiny = esShiny;
 
     try {
-      // Se consulta la PokéAPI para obtener datos del Pokémon
       const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${numeroPokemon}`);
       if (!response.ok) throw new Error("No se pudo obtener el Pokémon");
 
       const data = await response.json();
 
-      // Se capitaliza el nombre del Pokémon (por estética)
       const nombrePokemon = data.name.charAt(0).toUpperCase() + data.name.slice(1);
-
-      // Se asigna el sprite (normal)
-      this.sprite = data.sprites.front_default;
-
-      // Se extraen los tipos del Pokémon desde la API
+      this.sprite = esShiny ? data.sprites.front_shiny : data.sprites.front_default;
       this.tipos = data.types.map(t => t.type.name);
 
-      // Se retorna una cadena con número, nombre y si es shiny
       return `#${numeroPokemon} - ${nombrePokemon}${esShiny ? " (Shiny)" : ""}`;
     } catch (error) {
-      // Si falla la API, se retorna un mensaje con el número pero sin nombre
       console.error("Error al obtener el Pokémon:", error);
       return `#${numeroPokemon} (Error al obtener el nombre)`;
     }
   }
 
-  // Generador de número aleatorio basado en semilla (como random.seed en Python)
+  // Generador aleatorio basado en una semilla (como en Python)
   seededRandom(seed) {
     let x = Math.sin(seed) * 10000;
     return function () {
@@ -64,57 +49,69 @@ class Entrenador {
     };
   }
 
-  // Inicializa todo el proceso: asigna el Pokémon y guarda el resultado
+  // Inicializa al entrenador asignándole su Pokémon
   async inicializar() {
     this.pokemonInicial = await this.asignarPokemon(
       this.fechaNacimiento.dia,
       this.fechaNacimiento.mes,
       this.fechaNacimiento.anio
     );
-    return this; // retorna el objeto Entrenador con todo listo
+    return this;
   }
 
-  // Devuelve una cadena con toda la info del entrenador y su Pokémon inicial
+  // Muestra toda la info del entrenador
   mostrarInfo() {
     return `Entrenador: ${this.nombre}\n` +
-           `Género: ${this.genero}\n` +
-           `Fecha de Nacimiento: ${this.fechaNacimiento.dia}/${this.fechaNacimiento.mes}/${this.fechaNacimiento.anio}\n` +
-           `Pokémon Inicial: ${this.pokemonInicial}\n` +
-           `Tipo(s): ${this.tipos.join(", ")}`;
+      `Género: ${this.genero}\n` +
+      `Fecha de Nacimiento: ${this.fechaNacimiento.dia}/${this.fechaNacimiento.mes}/${this.fechaNacimiento.anio}\n` +
+      `Pokémon Inicial: ${this.pokemonInicial}\n` +
+      `Tipo(s): ${this.tipos.join(", ")}`;
   }
 }
 
-// ===============================
-// Función que se ejecuta al presionar el botón
-// ===============================
+// Función principal que se llama al presionar el botón
 async function crearEntrenador() {
-  // Se obtienen los valores desde los inputs del formulario
   const nombre = document.getElementById("nombre").value;
   const genero = document.getElementById("genero").value;
   const dia = parseInt(document.getElementById("dia").value);
   const mes = parseInt(document.getElementById("mes").value);
   const anio = parseInt(document.getElementById("anio").value);
 
-  // Validación básica para que no falte nada
   if (!nombre || isNaN(dia) || isNaN(mes) || isNaN(anio)) {
     alert("Por favor, completa todos los campos correctamente.");
     return;
   }
 
-  // Se crea el objeto Entrenador
-  const entrenador = new Entrenador(nombre, genero, dia, mes, anio);
+  // Validaciones adicionales
+  if (anio <= 1900 || mes > 2025) {
+    alert("El año debe estar entre 1900 y 2025.");
+    return;
+  }
+  if (mes <= 0 || mes > 12) {
+    alert("El mes debe estar entre 1 y 12.");
+    return;
+  }
+  if (dia <= 0 || dia > 31) {
+    alert("El día debe estar entre 1 y 31.");
+    return;
+  }
 
-  // Se inicializa (asigna el Pokémon y obtiene todo)
+
+  const entrenador = new Entrenador(nombre, genero, dia, mes, anio);
   await entrenador.inicializar();
 
-  // Se muestra la info del entrenador y Pokémon en el div de resultado
-  document.getElementById("info").textContent = entrenador.mostrarInfo();
+  const infoContainer = document.getElementById("info");
+  infoContainer.textContent = entrenador.mostrarInfo();
 
-  // Se muestra el sprite del Pokémon si existe
+  if (entrenador.esShiny) {
+    infoContainer.textContent += "\n🌟 ¡Es un Pokémon shiny!";
+  }
+
   const spriteImg = document.getElementById("sprite");
   if (entrenador.sprite) {
     spriteImg.src = entrenador.sprite;
     spriteImg.hidden = false;
+    spriteImg.style.filter = entrenador.esShiny ? "drop-shadow(0 0 10px gold)" : "none";
   } else {
     spriteImg.hidden = true;
   }
