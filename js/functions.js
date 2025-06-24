@@ -20,12 +20,12 @@ class Entrenador {
     const numeroPokemon = ((base + mix) % 493) + 1;
 
     // Determina si el Pokémon será shiny (1 en 4000)
-    const esShiny = Math.floor(Math.random() * 500) === 0;
+    const esShiny = Math.floor(Math.random() * 4000) === 0;
     this.esShiny = esShiny;
 
     try {
       const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${numeroPokemon}`);
-      if (!response.ok) throw new Error("No se pudo obtener el Pokémon");
+      if (!response.ok) throw new Error(`Respuesta inválida: ${response.status}`);
 
       const data = await response.json();
 
@@ -35,12 +35,12 @@ class Entrenador {
 
       return `#${numeroPokemon} - ${nombrePokemon}${esShiny ? " (Shiny)" : ""}`;
     } catch (error) {
-      console.error("Error al obtener el Pokémon:", error);
+      console.error("❌ Error al obtener el Pokémon:", error);
       return `#${numeroPokemon} (Error al obtener el nombre)`;
     }
   }
 
-  // Generador aleatorio basado en una semilla (como en Python)
+  // Generador aleatorio basado en una semilla
   seededRandom(seed) {
     let x = Math.sin(seed) * 10000;
     return function () {
@@ -71,19 +71,20 @@ class Entrenador {
 
 // Función principal que se llama al presionar el botón
 async function crearEntrenador() {
-  const nombre = document.getElementById("nombre").value;
+  const nombre = document.getElementById("nombre").value.trim();
   const genero = document.getElementById("genero").value;
   const dia = parseInt(document.getElementById("dia").value);
   const mes = parseInt(document.getElementById("mes").value);
   const anio = parseInt(document.getElementById("anio").value);
 
+  // Validación básica de campos
   if (!nombre || isNaN(dia) || isNaN(mes) || isNaN(anio)) {
     alert("Por favor, completa todos los campos correctamente.");
     return;
   }
 
   // Validaciones adicionales
-  if (anio <= 1900 || mes > 2025) {
+  if (anio < 1900 || anio > 2025) {
     alert("El año debe estar entre 1900 y 2025.");
     return;
   }
@@ -96,23 +97,27 @@ async function crearEntrenador() {
     return;
   }
 
+  try {
+    const entrenador = new Entrenador(nombre, genero, dia, mes, anio);
+    await entrenador.inicializar();
 
-  const entrenador = new Entrenador(nombre, genero, dia, mes, anio);
-  await entrenador.inicializar();
+    const infoContainer = document.getElementById("info");
+    infoContainer.textContent = entrenador.mostrarInfo();
 
-  const infoContainer = document.getElementById("info");
-  infoContainer.textContent = entrenador.mostrarInfo();
+    if (entrenador.esShiny) {
+      infoContainer.textContent += "\n🌟 ¡Es un Pokémon shiny!";
+    }
 
-  if (entrenador.esShiny) {
-    infoContainer.textContent += "\n🌟 ¡Es un Pokémon shiny!";
-  }
-
-  const spriteImg = document.getElementById("sprite");
-  if (entrenador.sprite) {
-    spriteImg.src = entrenador.sprite;
-    spriteImg.hidden = false;
-    spriteImg.style.filter = entrenador.esShiny ? "drop-shadow(0 0 10px gold)" : "none";
-  } else {
-    spriteImg.hidden = true;
+    const spriteImg = document.getElementById("sprite");
+    if (entrenador.sprite) {
+      spriteImg.src = entrenador.sprite;
+      spriteImg.hidden = false;
+      spriteImg.style.filter = entrenador.esShiny ? "drop-shadow(0 0 10px gold)" : "none";
+    } else {
+      spriteImg.hidden = true;
+    }
+  } catch (error) {
+    console.error("Error general al crear el entrenador:", error);
+    alert("Ocurrió un error al crear tu entrenador. Intenta de nuevo más tarde.");
   }
 }
